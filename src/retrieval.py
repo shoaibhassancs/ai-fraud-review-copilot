@@ -70,5 +70,40 @@ def embed_knowledge_base():
         print(f"  - {path.name}")
 
 
+def query_knowledge_base(query_text, n_results=1):
+    """
+    Query the fraud-pattern collection and return the top n_results matches.
+
+    Note on distance: this collection uses Chroma's default metric (L2),
+    not cosine — LOWER distance means MORE similar, not higher.
+    """
+    collection = get_collection()
+    results = collection.query(query_texts=[query_text], n_results=n_results)
+    return results
+
+
+def _print_query_result(query_text, n_results=2):
+    results = query_knowledge_base(query_text, n_results=n_results)
+    ids = results["ids"][0]
+    distances = results["distances"][0]
+    print(f'Query: "{query_text}"')
+    for doc_id, dist in zip(ids, distances):
+        print(f"    {doc_id}  (distance: {dist:.4f})")
+    print()
+
+
 if __name__ == "__main__":
     embed_knowledge_base()
+
+    print("\n--- Tier 1: naive flag_reason strings ---\n")
+    for q in ["velocity_spike", "geo_anomaly", "amount_spike", "new_merchant_category"]:
+        _print_query_result(q)
+
+    print("--- Tier 2: realistic natural-language queries ---\n")
+    for q in [
+        "Multiple transactions happened within a short time window",
+        "The transaction occurred somewhere far from the customer's home location",
+        "The transaction amount is much higher than this customer normally spends",
+        "The customer made a purchase in a merchant category they've never used before",
+    ]:
+        _print_query_result(q)

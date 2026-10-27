@@ -61,3 +61,4 @@ curl -X POST localhost:8000/review/{transaction_id}
 - No real financial data or real PII enters this repo at any point — synthetic data only.
 - Branch + PR for every change, even solo — real PR descriptions, not placeholders.
 - Flagger thresholds are tuned against the actual generated data's trigger rates, not picked abstractly — re-check counts after any regeneration (e.g. after editing `generate_data.py`, flag distribution can shift even with the same rule logic).
+- Retrieval queries must be natural-language phrasings built from the flag reason, not the raw `flag_reason` string — confirmed via manual testing (Day 2) that enum strings retrieve incorrectly for at least one flag type.
