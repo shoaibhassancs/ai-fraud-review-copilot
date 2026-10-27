@@ -37,15 +37,24 @@ fraud-review-copilot/
 │ └── run_eval.py # scores the agent against eval_set.json
 └── tests/
 
+
 Note: `card_not_present.md` and `account_takeover.md` are named for their standard fraud-ops meaning but written to ground `amount_spike` and `new_merchant_category` evidence respectively, since those two flag reasons had no directly-named pattern doc. Retrieval matches on content, not filename, so this is intentional — not a mismatch to fix.
 
 ## How to run it locally
+Requires Python 3.12 (not tested on other versions — chromadb's dependency chain had build issues on 3.15 during development).
+
 ```bash
 # install deps
 pip install -r requirements.txt
 
 # generate synthetic data (first run only)
 python data/generate_data.py
+
+# run the rule-based flagger (fills in flag_reason)
+python src/flagger.py
+
+# embed the knowledge base into Chroma (first run only, or after editing a doc)
+python src/retrieval.py
 
 # run the API
 uvicorn src.api:app --reload
