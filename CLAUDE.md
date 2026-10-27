@@ -16,6 +16,11 @@ Automated end to end except the final decision — the analyst always makes the 
 fraud-review-copilot/
 ├── data/ # synthetic data generator + generated CSVs
 ├── knowledge_base/ # fraud-pattern markdown docs (source for RAG)
+├── data/
+│   ├── generate_data.py   # builds the synthetic dataset
+│   ├── transactions.csv
+│   ├── customers.csv
+│   └── merchants.csv
 ├── src/
 │ ├── schemas.py # CaseNote model + Recommendation enum
 │ ├── flagger.py # rule-based flagging
