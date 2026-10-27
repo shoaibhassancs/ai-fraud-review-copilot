@@ -14,13 +14,16 @@ Automated end to end except the final decision — the analyst always makes the 
 
 ## Where things live
 fraud-review-copilot/
-├── data/ # synthetic data generator + generated CSVs
-├── knowledge_base/ # fraud-pattern markdown docs (source for RAG)
 ├── data/
-│   ├── generate_data.py   # builds the synthetic dataset
-│   ├── transactions.csv
-│   ├── customers.csv
-│   └── merchants.csv
+│ ├── generate_data.py # builds the synthetic dataset
+│ ├── transactions.csv
+│ ├── customers.csv
+│ └── merchants.csv
+├── knowledge_base/
+│ ├── card_not_present.md # amount-spike evidence (repurposed — see below)
+│ ├── account_takeover.md # new-category evidence (repurposed — see below)
+│ ├── velocity_fraud.md # velocity_spike evidence
+│ └── geo_anomaly.md # geo_anomaly evidence
 ├── src/
 │ ├── schemas.py # CaseNote model + Recommendation enum
 │ ├── flagger.py # rule-based flagging
@@ -33,6 +36,8 @@ fraud-review-copilot/
 │ ├── eval_set.json # 15–20 labeled cases
 │ └── run_eval.py # scores the agent against eval_set.json
 └── tests/
+
+Note: `card_not_present.md` and `account_takeover.md` are named for their standard fraud-ops meaning but written to ground `amount_spike` and `new_merchant_category` evidence respectively, since those two flag reasons had no directly-named pattern doc. Retrieval matches on content, not filename, so this is intentional — not a mismatch to fix.
 
 ## How to run it locally
 ```bash
