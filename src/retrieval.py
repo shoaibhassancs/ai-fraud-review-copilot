@@ -53,7 +53,19 @@ def embed_knowledge_base():
     # updates the existing entry instead of erroring on a duplicate id.
     collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
-    print(f"Embedded {len(md_files)} docs into collection '{COLLECTION_NAME}':")
+    # Verify against the collection's actual state, not just the input list —
+    # a silent partial failure would still print success if we only counted
+    # what we intended to write.
+    stored = collection.get(ids=ids)
+    stored_ids = set(stored["ids"])
+    expected_ids = set(ids)
+    if stored_ids != expected_ids:
+        missing = expected_ids - stored_ids
+        raise RuntimeError(
+            f"Upsert did not persist correctly — missing ids: {missing}"
+        )
+
+    print(f"Embedded {len(stored_ids)} docs into collection '{COLLECTION_NAME}' (verified against collection.get):")
     for path in md_files:
         print(f"  - {path.name}")
 
