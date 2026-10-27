@@ -40,6 +40,7 @@ RISK_TIER_WEIGHTS = [0.6, 0.3, 0.1]  # most merchants are low risk
 
 def generate_customers(n):
     customers = []
+    preferred_categories = {}  # customer_id -> list of 1-2 categories they mostly shop in
     for i in range(1, n + 1):
         # Vary spend profiles so transaction amounts aren't one flat range —
         # some customers are naturally low spenders, some high.
@@ -51,8 +52,9 @@ def generate_customers(n):
         else:
             spend_min, spend_max = round(random.uniform(100, 250), 2), round(random.uniform(400, 900), 2)
 
+        cust_id = f"C{i:03d}"
         customers.append({
-            "id": f"C{i:03d}",
+            "id": cust_id,
             "name": fake.name(),
             "home_location": fake.city(),
             "typical_spend_min": spend_min,
@@ -61,7 +63,16 @@ def generate_customers(n):
             # those are the gray-area "new account, ordinary purchase" cases.
             "account_age_days": random.randint(1, 60) if random.random() < 0.15 else random.randint(61, 2500),
         })
-    return customers
+
+        # Category affinity: each customer mostly shops in 1-2 categories.
+        # Internal generation detail only — not written to customers.csv,
+        # since it's not one of the spec's Data Design fields. flagger.py
+        # derives "new merchant category" from actual transaction history,
+        # not from this.
+        k = random.choice([1, 2])
+        preferred_categories[cust_id] = random.sample(MERCHANT_CATEGORIES, k=k)
+
+    return customers, preferred_categories
 
 
 def generate_merchants(n):
@@ -76,13 +87,28 @@ def generate_merchants(n):
     return merchants
 
 
-def generate_transactions(n, customers, merchants):
+def generate_transactions(n, customers, merchants, preferred_categories):
     transactions = []
     now = datetime.now()
 
+    merchants_by_category = {}
+    for m in merchants:
+        merchants_by_category.setdefault(m["category"], []).append(m)
+
     for i in range(1, n + 1):
         customer = random.choice(customers)
-        merchant = random.choice(merchants)
+
+        # Merchant selection: ~85% within the customer's preferred
+        # categories, ~15% any merchant — same mostly-normal/occasionally-not
+        # shape used for amount and location, so "new merchant category"
+        # means something real once flagger.py checks for it.
+        cust_prefs = preferred_categories[customer["id"]]
+        candidate_categories = [c for c in cust_prefs if c in merchants_by_category]
+        if candidate_categories and random.random() < 0.85:
+            chosen_category = random.choice(candidate_categories)
+            merchant = random.choice(merchants_by_category[chosen_category])
+        else:
+            merchant = random.choice(merchants)
 
         spend_min = customer["typical_spend_min"]
         spend_max = customer["typical_spend_max"]
@@ -134,9 +160,9 @@ def write_csv(rows, filename, fieldnames):
 
 
 def main():
-    customers = generate_customers(N_CUSTOMERS)
+    customers, preferred_categories = generate_customers(N_CUSTOMERS)
     merchants = generate_merchants(N_MERCHANTS)
-    transactions = generate_transactions(N_TRANSACTIONS, customers, merchants)
+    transactions = generate_transactions(N_TRANSACTIONS, customers, merchants, preferred_categories)
 
     write_csv(customers, "customers.csv",
               ["id", "name", "home_location", "typical_spend_min", "typical_spend_max", "account_age_days"])

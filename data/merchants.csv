@@ -1,21 +1,21 @@
 id,name,category,risk_tier
-M001,Shields-Brown,electronics,medium
-M002,"Joyce, Garcia and Powell",electronics,high
-M003,Mcbride-Rodriguez,travel,low
-M004,Lee Group,healthcare,high
+M001,Shields-Brown,groceries,high
+M002,"Joyce, Garcia and Powell",dining,low
+M003,Mcbride-Rodriguez,healthcare,low
+M004,Lee Group,clothing,high
 M005,Henderson LLC,travel,low
-M006,Wright-Leblanc,clothing,high
-M007,Morton-Chase,dining,medium
-M008,Williams PLC,clothing,high
-M009,Novak and Sons,utilities,low
-M010,Russell Group,healthcare,low
-M011,Hancock Inc,dining,low
+M006,Wright-Leblanc,clothing,low
+M007,Morton-Chase,healthcare,low
+M008,Williams PLC,healthcare,low
+M009,Novak and Sons,entertainment,low
+M010,Russell Group,groceries,low
+M011,Hancock Inc,groceries,medium
 M012,Gray Group,groceries,low
-M013,House-Glover,dining,low
-M014,Henderson-Bernard,groceries,low
-M015,"Stanley, Tucker and Lee",groceries,low
-M016,Novak PLC,groceries,medium
-M017,"Daniels, Adkins and Brown",electronics,low
-M018,"Woods, Calhoun and Schmidt",entertainment,medium
-M019,Yu Inc,dining,low
-M020,Jones Inc,healthcare,low
+M013,House-Glover,healthcare,low
+M014,Henderson-Bernard,travel,low
+M015,"Stanley, Tucker and Lee",electronics,medium
+M016,Novak PLC,electronics,low
+M017,"Daniels, Adkins and Brown",dining,low
+M018,"Woods, Calhoun and Schmidt",dining,low
+M019,Yu Inc,groceries,medium
+M020,Jones Inc,clothing,medium

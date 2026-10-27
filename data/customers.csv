@@ -1,31 +1,31 @@
 id,name,home_location,typical_spend_min,typical_spend_max,account_age_days
 C001,Allison Hill,East Jill,116.7,770.78,632
-C002,Stephanie Miller,Johnsonland,115.37,770.33,2479
-C003,Jonathan Johnson,Lake Debra,41.91,168.74,169
-C004,Connie Lawrence,Port Lindachester,129.83,724.94,963
-C005,Christopher Bernard,Curtisfurt,75.36,311.89,52
-C006,Ryan Munoz,Lake Stephenville,30.94,80.42,1439
-C007,Jamie Arnold,Barbaraland,12.78,65.8,1144
-C008,Darren Roberts,Port Jesseville,31.89,92.17,1611
-C009,Jesse Flowers,West Michael,26.56,109.76,1542
-C010,Mia Sutton,New Cynthiaside,128.84,434.78,1246
-C011,Carla Gray,Lake Mark,35.66,111.99,1918
-C012,Amy Underwood,Richardland,225.12,481.33,1154
-C013,Tommy Walter,Jasonfort,240.5,724.02,761
-C014,Thomas Ellis,Donaldside,209.37,481.7,2342
-C015,Nicole Patterson,Coxberg,30.54,110.57,999
-C016,Ann Williams,East Courtneychester,34.15,84.07,59
-C017,Janice Carlson,Riceside,231.46,557.34,1681
-C018,Alexandra Le,Kaylamouth,168.83,532.44,2360
-C019,Jeffrey Chavez,Teresaburgh,139.41,692.29,1696
-C020,Ashley Garrett,East Nathaniel,53.16,349.51,433
-C021,Troy Nielsen,New Mariotown,35.83,69.17,1790
-C022,Jack Galloway,Johnbury,109.53,590.81,2228
-C023,Theresa Miller,Cabreraside,98.26,322.16,47
-C024,Betty Alvarez,West Allison,30.45,92.22,1454
-C025,Tracey Hickman,Lake Larry,18.81,69.49,47
-C026,Marie Kim DDS,East Jeffreymouth,139.51,650.29,496
-C027,Julian Chapman,North Jeanton,144.77,719.47,687
-C028,Taylor Heath,New Johnfort,85.75,257.88,2233
-C029,Carlos Walls,Sanchezfort,27.97,89.32,24
-C030,Cheryl Davis,Gomezchester,54.37,198.17,383
+C002,Stephanie Miller,Johnsonland,163.29,414.9,2130
+C003,Jonathan Johnson,Lake Debra,197.48,672.47,2474
+C004,Connie Lawrence,Port Lindachester,30.94,80.42,1439
+C005,Christopher Bernard,Curtisfurt,45.8,319.5,238
+C006,Ryan Munoz,Lake Stephenville,26.56,109.76,1542
+C007,Jamie Arnold,Barbaraland,29.84,106.38,1014
+C008,Darren Roberts,Port Jesseville,67.2,316.82,1516
+C009,Jesse Flowers,West Michael,240.5,724.02,761
+C010,Mia Sutton,New Cynthiaside,62.77,347.9,2342
+C011,Carla Gray,Lake Mark,16.87,61.93,1157
+C012,Amy Underwood,Richardland,231.46,557.34,1681
+C013,Tommy Walter,Jasonfort,17.4,93.68,2455
+C014,Thomas Ellis,Donaldside,39.92,68.3,253
+C015,Nicole Patterson,Coxberg,124.0,740.24,1637
+C016,Ann Williams,East Courtneychester,98.26,322.16,47
+C017,Janice Carlson,Riceside,151.03,546.75,74
+C018,Alexandra Le,Kaylamouth,36.12,77.91,875
+C019,Jeffrey Chavez,Teresaburgh,26.18,106.72,63
+C020,Ashley Garrett,East Nathaniel,37.87,112.72,1320
+C021,Troy Nielsen,New Mariotown,36.34,116.82,32
+C022,Jack Galloway,Johnbury,29.79,116.81,2222
+C023,Theresa Miller,Cabreraside,203.48,756.47,1590
+C024,Betty Alvarez,West Allison,16.74,80.29,1003
+C025,Tracey Hickman,Lake Larry,31.24,63.53,3
+C026,Marie Kim DDS,East Jeffreymouth,18.35,89.12,2399
+C027,Julian Chapman,North Jeanton,88.45,188.08,28
+C028,Taylor Heath,New Johnfort,91.83,160.83,464
+C029,Carlos Walls,Sanchezfort,150.9,830.84,840
+C030,Cheryl Davis,Gomezchester,18.36,74.99,1876

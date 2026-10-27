@@ -55,3 +55,4 @@ curl -X POST localhost:8000/review/{transaction_id}
 - Keep tool calls (`tools.py`) deterministic and boring — they simulate backend systems, not model logic.
 - No real financial data or real PII enters this repo at any point — synthetic data only.
 - Branch + PR for every change, even solo — real PR descriptions, not placeholders.
+- Flagger thresholds are tuned against the actual generated data's trigger rates, not picked abstractly — re-check counts after any regeneration (e.g. after editing `generate_data.py`, flag distribution can shift even with the same rule logic).
