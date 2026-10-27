@@ -7,7 +7,7 @@ AI Fraud-Review Copilot is an agent that takes a flagged transaction, retrieves 
 1. **Flag** — rule-based flagger tags a transaction (amount spike, new merchant category, geo anomaly, velocity).
 2. **Retrieve** — RAG pulls the relevant fraud-pattern doc from the Chroma knowledge base.
 3. **Tool calls** — agent calls `lookup_customer_history(customer_id)` and `lookup_merchant_info(merchant_id)`.
-4. **Generate** — agent drafts a structured case note (risk factors, evidence, recommendation, confidence).
+4. **Generate** — agent drafts a structured case note (risk factors, evidence, recommendation, confidence) via the Google Gemini API (`google-genai`).
 5. **Guardrail** — output is checked before returning: no definitive fraud claims, PII redacted.
 
 Automated end to end except the final decision — the analyst always makes the call.
@@ -17,6 +17,7 @@ fraud-review-copilot/
 ├── data/ # synthetic data generator + generated CSVs
 ├── knowledge_base/ # fraud-pattern markdown docs (source for RAG)
 ├── src/
+│ ├── schemas.py # CaseNote model + Recommendation enum
 │ ├── flagger.py # rule-based flagging
 │ ├── retrieval.py # embeddings + Chroma lookup
 │ ├── tools.py # lookup_customer_history, lookup_merchant_info
