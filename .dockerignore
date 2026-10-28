@@ -1,0 +1,14 @@
+# Without this file, COPY . . would copy .venv/, .git/, and critically
+# .env -- your real API key -- directly into the image. Same instinct as
+# .gitignore, applied to a second place secrets can leak.
+
+.venv/
+.env
+.git/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Regenerated fresh during the build (Dockerfile's RUN python
+# src/retrieval.py step) -- no reason to copy a stale local copy in.
+chroma_db/
