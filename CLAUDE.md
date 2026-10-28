@@ -189,3 +189,14 @@ manual loop — not AFC — is what executes.
   **Not yet done:** a full 18-case re-run to get an updated overall accuracy number. Deferred
   deliberately (Action 23, late-night judgment-quality call) rather than run at the time the fix
   landed — next natural opportunity is the next full CI run or a dedicated Day 7 check.
+
+- **Update, Action 23 (Day 6):** `T0078` passed three consecutive times since the prompt fix
+  landed (two manual re-runs plus this CI run) — the watch-item above about whether its past flips
+  were this bug, not pure variance, is now looking real, though three data points isn't proof.
+  Separately, `T0018` (velocity_spike) failed for the first time ever in this project's history on
+  this same CI run — it had previously passed Action 13's manual test, every Action 17 run it
+  reached, and all three of Action 20's CI runs. Not yet investigated: could be ordinary
+  non-determinism finally landing wrong on a case that happened to be consistently lucky until now,
+  or an unintended side effect of Action 23's prompt change spilling outside its targeted
+  categories. Needs a second data point before concluding either way — same discipline Action 17
+  established against tuning off one sample.
