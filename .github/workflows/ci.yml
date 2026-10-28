@@ -17,32 +17,21 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Embed knowledge base into Chroma
-        # chroma_db/ is git-ignored (derived, regenerable state) -- CI starts
-        # with no embedded knowledge base, same reason the Dockerfile bakes
-        # this step in at build time (Action 18). Skipping this means every
-        # CI run would silently retrieve nothing.
         run: python src/retrieval.py
 
       - name: Run eval subset (one case per flag type)
-        # Full 18-case set is deliberately not run here -- Action 17 hit the
-        # model's 15 requests/minute cap even with 30s pacing, and Action 19
-        # measured 65-110s per request, so a full run would both burn a
-        # meaningful chunk of daily quota and take 20-35+ minutes per push.
-        # --only (built in Action 17) runs one representative case per flag
-        # type instead: a regression in any category still gets caught, at
-        # ~4 calls' worth of quota instead of ~50+.
+        # One per flag type, picked for decisiveness, not just coverage --
+        # T0014 (amount_spike) was swapped for T0078 after a real, logged
+        # CI flip (escalate -> clear on two consecutive runs, zero code
+        # changes) exposed it as a genuinely borderline case: a moderate
+        # overage plus a high-risk-merchant tag, with a mitigating prior
+        # purchase the model itself surfaced back in Action 13. T0078 is a
+        # single-signal case (~2.75x typical max, no complicating factor)
+        # per eval_set.json's own reasoning -- chosen to reduce CI flakiness,
+        # not yet live-confirmed stable itself.
         #
-        # Case selection: T0116 (geo_anomaly), T0055 (new_merchant_category),
-        # T0014 (amount_spike), T0018 (velocity_spike) -- one per flag type,
-        # each confirmed correct via Action 13's manual run at minimum
-        # (T0116 additionally confirmed via Action 17's eval script directly).
-        #
-        # Note on the threshold: run_eval.py's 80% bar has no value that
-        # lands at exactly 80% on 4 cases (3/4=75% fails, 4/4=100% passes),
-        # so this gate is effectively "all 4 must pass" in practice, not a
-        # true 80% bar. Accepted as-is rather than building a CI-specific
-        # threshold, per the project's own "don't over-engineer the scoring
-        # logic" instinct.
+        # T0116 (geo_anomaly), T0078 (amount_spike), T0018 (velocity_spike),
+        # T0055 (new_merchant_category).
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m eval.run_eval --only T0116,T0055,T0014,T0018
+        run: python -m eval.run_eval --only T0116,T0078,T0018,T0055
