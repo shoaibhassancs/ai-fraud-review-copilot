@@ -33,7 +33,7 @@ fraud-review-copilot/
 │ ├── guardrail.py # PII redaction + language constraints
 │ └── api.py # FastAPI app
 ├── eval/
-│ ├── eval_set.json # 15–20 labeled cases
+│ ├── eval_set.json # 18 hand-labeled cases
 │ └── run_eval.py # scores the agent against eval_set.json
 └── tests/
 
@@ -41,8 +41,6 @@ fraud-review-copilot/
 Note: `card_not_present.md` and `account_takeover.md` are named for their standard fraud-ops meaning but written to ground `amount_spike` and `new_merchant_category` evidence respectively, since those two flag reasons had no directly-named pattern doc. Retrieval matches on content, not filename, so this is intentional — not a mismatch to fix.
 
 ## How to run it locally
-Requires Python 3.12 (not tested on other versions — chromadb's dependency chain had build issues on 3.15 during development).
-
 ```bash
 # install deps
 pip install -r requirements.txt
@@ -56,18 +54,33 @@ python src/flagger.py
 # embed the knowledge base into Chroma (first run only, or after editing a doc)
 python src/retrieval.py
 
+# draft a case note for one transaction (manual check)
+python -m src.agent <transaction_id>
+
 # run the API
 uvicorn src.api:app --reload
 
 # call it
 curl -X POST localhost:8000/review/{transaction_id}
+
+# run the eval set against the agent (paces calls to stay under the
+# model's free-tier requests-per-minute cap -- see run_eval.py for why)
+python -m eval.run_eval
 ```
 
 ## Conventions to keep
-- Always run `python eval/run_eval.py` before committing a prompt or retrieval change — a prompt change that tanks eval accuracy should be caught before it's pushed.
+- Always run `python -m eval.run_eval` before committing a prompt or retrieval change — a prompt change that tanks eval accuracy should be caught before it's pushed.
 - Guardrail checks are code-level (regex/rule), not just prompt instructions — never remove or weaken this in favor of a prompt-only fix.
 - Keep tool calls (`tools.py`) deterministic and boring — they simulate backend systems, not model logic.
 - No real financial data or real PII enters this repo at any point — synthetic data only.
 - Branch + PR for every change, even solo — real PR descriptions, not placeholders.
 - Flagger thresholds are tuned against the actual generated data's trigger rates, not picked abstractly — re-check counts after any regeneration (e.g. after editing `generate_data.py`, flag distribution can shift even with the same rule logic).
 - Retrieval queries must be natural-language phrasings built from the flag reason, not the raw `flag_reason` string — confirmed via manual testing (Day 2) that enum strings retrieve incorrectly for at least one flag type.
+- Scripts that import from other `src/` modules (`agent.py` and beyond) must be run with `python -m src.<name>`, not `python src/<name>.py` — only standalone scripts with no cross-module imports (`flagger.py`, `retrieval.py`, `tools.py`) support the direct form. This applies to `eval/run_eval.py` too: run as `python -m eval.run_eval`.
+
+## Known gaps (dated)
+- **Eval accuracy as of Action 17 (Day 4): 61.1% (11/18) — below SCOPE.md's 80% bar.** By flag type: `geo_anomaly` 4/5 (80%), `velocity_spike` 3/4 (75%), `amount_spike` 3/5 (60%), `new_merchant_category` 1/4 (25%). Two real patterns surfaced, not noise:
+  - `new_merchant_category` fails in both directions, not just one bias: escalated two cases (T0071, T0091) where the ground truth said clear (normal amount, low/medium-risk merchant, nothing but a new category) and cleared the one case (T0133) where the ground truth said escalate specifically because of a 28-day-old account — the account-takeover signal the knowledge base describes.
+  - `amount_spike`'s two misses (T0078, T0143) share a shape: both were labeled escalate purely on amount magnitude at a low-risk merchant, and the agent cleared both — possibly anchoring on the merchant's low risk tag over the raw amount deviation. Not yet confirmed against the actual `case_note` text.
+  - To investigate: pull the real `case_note` text for these five misses to see the agent's actual reasoning, not just the final verdict:
+    `python -m eval.run_eval --only T0071,T0091,T0133,T0078,T0143`

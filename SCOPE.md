@@ -9,7 +9,7 @@ An agent that, given a flagged transaction, retrieves fraud-pattern knowledge, p
 - A small RAG knowledge base
 - Two tool calls: customer history, merchant info
 - The case-note-drafting agent
-- One guardrail: no definitive fraud claims + PII redactio
+- One guardrail: no definitive fraud claims + PII redaction
 - A 15–20 case eval set
 - Containerized/deployed API with CI running evals on push
 

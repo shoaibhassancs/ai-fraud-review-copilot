@@ -22,26 +22,34 @@ Manual function-calling loop, not the SDK's automatic mode — each step
 explicit and visible, because being able to describe the mechanism is
 the point of this project, not just getting an answer out of it.
 
-Run directly for a quick manual check against one transaction:
-    python src/agent.py <transaction_id>
+Run directly for a quick manual check against one transaction. This file
+imports from other src/ modules (schemas, retrieval, tools), so it must be
+run as a module from the project root, not as a direct script path:
+    python -m src.agent <transaction_id>
 """
 
 import os
 import sys
 import csv
+import time
 from pathlib import Path
 
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+from google.genai.errors import ServerError
 
 from src.schemas import CaseNote
 from src.retrieval import query_knowledge_base
 from src.tools import lookup_customer_history, lookup_merchant_info
+from src.guardrail import check_fraud_language, redact_pii
 
 load_dotenv()
 
-MODEL_NAME = "gemini-3.8-flash"  # verified against Google AI's current model list: supports function calling + structured outputs + free tier
+MODEL_NAME = "gemini-3.5-flash-lite"  # Switched from gemini-3.8-flash after Action 13: that model's
+# free tier has a 20 requests/day cap, which real testing hit (429 RESOURCE_EXHAUSTED). flash-lite
+# ran successfully for all 4 of Action 13's real transactions and draws from a separate quota pool,
+# so it isn't affected by 3.8-flash's exhaustion.
 
 DATA_DIR = Path(__file__).parent.parent / "data"
 TRANSACTIONS_PATH = DATA_DIR / "transactions.csv"
@@ -52,7 +60,14 @@ _client = None
 def get_client():
     global _client
     if _client is None:
-        _client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+        _client = genai.Client(
+            api_key=os.environ["GEMINI_API_KEY"],
+            # Explicit timeout (ms) so a slow/stuck call fails with a clear
+            # error instead of hanging indefinitely. Gemini 3.8 Flash's
+            # "thinking" mode plus function declarations can genuinely take
+            # a while — 120s gives it room without waiting forever.
+            http_options=types.HttpOptions(timeout=120_000),
+        )
     return _client
 
 
@@ -99,6 +114,26 @@ FLAG_REASON_QUERIES = {
     "amount_spike": "The transaction amount is much higher than this customer normally spends",
     "new_merchant_category": "The customer made a purchase in a merchant category they've never used before",
 }
+
+
+def generate_with_retry(client, model, contents, config, max_attempts=4, initial_delay=20):
+    """
+    Call generate_content with our own retry/backoff on top of the SDK's
+    internal one — the SDK's own retry (via tenacity) exhausts in seconds,
+    which isn't long enough to ride out a sustained "high demand" 503 on a
+    newly-launched model. Waits 20s, 40s, 80s between attempts (roughly
+    2.5 minutes total) before giving up and raising the real error.
+    """
+    delay = initial_delay
+    for attempt in range(1, max_attempts + 1):
+        try:
+            return client.models.generate_content(model=model, contents=contents, config=config)
+        except ServerError as e:
+            if attempt == max_attempts:
+                raise
+            print(f"  [attempt {attempt}/{max_attempts}] {e} — retrying in {delay}s...")
+            time.sleep(delay)
+            delay *= 2
 
 
 def get_transaction(transaction_id):
@@ -151,9 +186,7 @@ def run_tool_calling_phase(client, transaction):
     # branch on which ones get called — Action 13's manual run is what
     # would surface it if that assumption turns out wrong.
     while True:
-        response = client.models.generate_content(
-            model=MODEL_NAME, contents=contents, config=config,
-        )
+        response = generate_with_retry(client, MODEL_NAME, contents, config)
         candidate = response.candidates[0]
         contents.append(candidate.content)
 
@@ -196,9 +229,7 @@ def run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_sour
         response_schema=CaseNote,
     )
 
-    response = client.models.generate_content(
-        model=MODEL_NAME, contents=contents, config=config,
-    )
+    response = generate_with_retry(client, MODEL_NAME, contents, config)
     return response.parsed
 
 
@@ -213,6 +244,25 @@ def draft_case_note(transaction_id):
     fraud_pattern_doc, fraud_pattern_source = retrieve_fraud_pattern(transaction["flag_reason"])
     contents, tools_called = run_tool_calling_phase(client, transaction)
     case_note = run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_source)
+
+    # Guardrail (Generate -> Guardrail per the architecture's stage order).
+    # Runs here, not in api.py, so a direct `python -m src.agent` run goes
+    # through it too — a check that only lives in the HTTP layer isn't a
+    # real guardrail.
+    #
+    # Order matters: check first, redact second. check_fraud_language
+    # raises GuardrailViolation uncaught on a genuine finding — consistent
+    # with api.py's "no defensive handling for genuine failures" stance,
+    # this propagates as a real failure instead of being swallowed.
+    # redact_pii runs only once that check has passed.
+    check_fraud_language(case_note)
+
+    # A fresh lookup (cheap local CSV read, not an API call) rather than
+    # parsing the name back out of the Phase 1 conversation history.
+    customer_info = lookup_customer_history(transaction["customer_id"])
+    customer_name = customer_info.get("name")
+    if customer_name:
+        case_note = redact_pii(case_note, customer_name)
 
     return {
         "transaction_id": transaction_id,

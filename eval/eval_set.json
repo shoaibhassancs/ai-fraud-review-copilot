@@ -1,0 +1,110 @@
+[
+  {
+    "transaction_id": "T0116",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "geo_anomaly",
+    "reasoning": "Amount is over 5x this customer's typical spending ceiling and occurred far from home — two independent anomalies compounding on an established account."
+  },
+  {
+    "transaction_id": "T0079",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "geo_anomaly",
+    "reasoning": "Amount is about 40% above typical max and occurred away from home — two signals stacking rather than one."
+  },
+  {
+    "transaction_id": "T0011",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "geo_anomaly",
+    "reasoning": "Amount is within typical range; the location mismatch is the only signal present, with nothing reinforcing it -- same standard applied to T0086/T0023."
+  },
+  {
+    "transaction_id": "T0086",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "geo_anomaly",
+    "reasoning": "Amount is normal for this customer; the merchant's high risk tier is a blanket label on M001, not behavior specific to this transaction, and doesn't reinforce any real anomaly here."
+  },
+  {
+    "transaction_id": "T0029",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "geo_anomaly",
+    "reasoning": "Amount is well within typical range, merchant risk is only medium, and the long account history supports treating the location mismatch as a simple trip."
+  },
+  {
+    "transaction_id": "T0078",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "amount_spike",
+    "reasoning": "Amount is about 2.75x this customer's typical maximum even with no location anomaly and a low-risk merchant — the sheer magnitude is the signal."
+  },
+  {
+    "transaction_id": "T0112",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "amount_spike",
+    "reasoning": "Amount is roughly 3x typical max at a dining merchant, an extreme spend for that category regardless of the merchant's low risk tier."
+  },
+  {
+    "transaction_id": "T0014",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "amount_spike",
+    "reasoning": "Moderate overage combined with a high-risk merchant; matches the real agent's own Action 13 conclusion for this transaction."
+  },
+  {
+    "transaction_id": "T0124",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "amount_spike",
+    "reasoning": "Only about 20% over typical max at a low-risk, familiar merchant category, on a very long-standing account — reads as ordinary spending variance."
+  },
+  {
+    "transaction_id": "T0143",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "amount_spike",
+    "reasoning": "About 55% over typical max, a larger deviation than a comparable cleared case, even though the merchant itself is low-risk."
+  },
+  {
+    "transaction_id": "T0018",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "velocity_spike",
+    "reasoning": "Amount is within typical range with no other risk signals; matches the real agent's own Action 13 conclusion for this transaction."
+  },
+  {
+    "transaction_id": "T0132",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "velocity_spike",
+    "reasoning": "Amount is comfortably within typical range; a medium-risk merchant alone doesn't outweigh an otherwise ordinary transaction."
+  },
+  {
+    "transaction_id": "T0023",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "velocity_spike",
+    "reasoning": "Amount and location are both normal for this customer; the merchant's high risk tier is a static tag rather than evidence tied to this specific transaction."
+  },
+  {
+    "transaction_id": "T0102",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "velocity_spike",
+    "reasoning": "In-range amount, low-risk merchant, and a very long account history consistent with this customer's other low-risk transactions."
+  },
+  {
+    "transaction_id": "T0055",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "new_merchant_category",
+    "reasoning": "In-range amount at a low-risk merchant; matches the real agent's own Action 13 conclusion for this transaction."
+  },
+  {
+    "transaction_id": "T0071",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "new_merchant_category",
+    "reasoning": "Amount is within typical range even at a new category, with a low-risk merchant and no other anomalies."
+  },
+  {
+    "transaction_id": "T0091",
+    "expected_recommendation": "clear",
+    "expected_flag_reason": "new_merchant_category",
+    "reasoning": "Unremarkable amount, only medium merchant risk, and a very long account history."
+  },
+  {
+    "transaction_id": "T0133",
+    "expected_recommendation": "escalate",
+    "expected_flag_reason": "new_merchant_category",
+    "reasoning": "The account is only 28 days old — new-category spending on a brand-new account is the account-takeover pattern described in the knowledge base, even though the amount itself looks ordinary."
+  }
+]
