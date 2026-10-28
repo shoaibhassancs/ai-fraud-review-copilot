@@ -19,7 +19,7 @@ jobs:
       - name: Embed knowledge base into Chroma
         run: python src/retrieval.py
 
-      - name: Run eval subset (6 cases: 2x geo_anomaly, 2x amount_spike, 1x velocity_spike, 1x new_merchant_category)
+      - name: Run eval subset (6 cases, 2 per weakest category)
         # Widened from 4 to 6 after two consecutive real CI failures (T0014,
         # then T0078) demonstrated genuine Gemini non-determinism on
         # borderline cases -- not a selection mistake, confirmed noise. A
