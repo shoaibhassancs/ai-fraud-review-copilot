@@ -22,6 +22,14 @@ Manual function-calling loop, not the SDK's automatic mode — each step
 explicit and visible, because being able to describe the mechanism is
 the point of this project, not just getting an answer out of it.
 
+Note (Action 22): the SDK logs "AFC is enabled with max remote calls: 10"
+regardless of automatic_function_calling.disable=True -- a known upstream
+logging quirk, not a sign automatic mode is actually active. Confirmed via
+tools_called: that set is only ever populated inside this file's own
+manual loop (below), so its correct population on every real run is
+direct evidence the manual loop -- not AFC -- is what executes. Ignore
+that log line if you see it.
+
 Run directly for a quick manual check against one transaction. This file
 imports from other src/ modules (schemas, retrieval, tools), so it must be
 run as a module from the project root, not as a direct script path:
@@ -42,7 +50,7 @@ from google.genai.errors import ServerError
 from src.schemas import CaseNote
 from src.retrieval import query_knowledge_base
 from src.tools import lookup_customer_history, lookup_merchant_info
-from src.guardrail import check_fraud_language, redact_pii
+from src.guardrail import check_fraud_language, redact_pii, GuardrailViolation
 
 load_dotenv()
 
@@ -157,7 +165,8 @@ def run_tool_calling_phase(client, transaction):
     """
     Phase 1: model requests lookup_customer_history and lookup_merchant_info,
     we execute them, results go back into the conversation. Returns the
-    full message history so Phase 2 can build on it.
+    full message history, which tools were called, and the total tokens
+    used across every call in this loop (there can be more than one).
     """
     prompt = (
         "A transaction has been flagged for review. Use the available tools "
@@ -180,6 +189,7 @@ def run_tool_calling_phase(client, transaction):
     )
 
     tools_called = set()
+    total_tokens = 0
 
     # Loop until the model stops requesting function calls. Straight-line
     # assumption: every flagged transaction needs both tools, so we don't
@@ -187,6 +197,12 @@ def run_tool_calling_phase(client, transaction):
     # would surface it if that assumption turns out wrong.
     while True:
         response = generate_with_retry(client, MODEL_NAME, contents, config)
+        # Defensive, not a guardrail-style failure: usage_metadata is an
+        # observability detail, not a correctness concern, so a missing or
+        # unexpected field here shouldn't take down the actual request --
+        # it should just log a 0 rather than crash a working case note.
+        total_tokens += getattr(response.usage_metadata, "total_token_count", 0) or 0
+
         candidate = response.candidates[0]
         contents.append(candidate.content)
 
@@ -204,14 +220,13 @@ def run_tool_calling_phase(client, transaction):
             )
         contents.append(types.Content(role="user", parts=response_parts))
 
-    return contents, tools_called
+    return contents, tools_called, total_tokens
 
 
 def run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_source):
     """
     Phase 2: a fresh call with response_schema=CaseNote set, no tools
-    declared. The model produces the final structured case note from
-    everything gathered in Phase 1 plus the retrieved fraud-pattern doc.
+    declared. Returns the drafted case note and this call's token usage.
     """
     grounding_instruction = (
         "Here is the relevant fraud-pattern reference material, retrieved "
@@ -220,7 +235,16 @@ def run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_sour
         "info, and this reference material, draft a structured case note. "
         "Cite specific evidence from what you looked up. Never state "
         "definitively that fraud occurred — only recommend escalate or "
-        "clear, with your reasoning, for a human analyst to decide."
+        "clear, with your reasoning, for a human analyst to decide.\n\n"
+        "When weighing evidence, keep two things in mind:\n"
+        "- A customer's prior transactions at the same merchant only mitigate "
+        "an amount anomaly if those prior amounts were themselves comparable "
+        "in size to the current one. A history of smaller purchases at a "
+        "merchant does not make a much larger purchase there less unusual.\n"
+        "- If a risk factor you cite directly matches a pattern described in "
+        "the reference material above, that match should meaningfully "
+        "influence your recommendation — don't name a matching signal as "
+        "evidence and then recommend as if it didn't apply."
     )
     contents = contents + [types.Content(role="user", parts=[types.Part(text=grounding_instruction)])]
 
@@ -230,7 +254,8 @@ def run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_sour
     )
 
     response = generate_with_retry(client, MODEL_NAME, contents, config)
-    return response.parsed
+    tokens = getattr(response.usage_metadata, "total_token_count", 0) or 0
+    return response.parsed, tokens
 
 
 def draft_case_note(transaction_id):
@@ -242,8 +267,9 @@ def draft_case_note(transaction_id):
     client = get_client()
 
     fraud_pattern_doc, fraud_pattern_source = retrieve_fraud_pattern(transaction["flag_reason"])
-    contents, tools_called = run_tool_calling_phase(client, transaction)
-    case_note = run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_source)
+    contents, tools_called, phase1_tokens = run_tool_calling_phase(client, transaction)
+    case_note, phase2_tokens = run_generation_phase(client, contents, fraud_pattern_doc, fraud_pattern_source)
+    total_tokens = phase1_tokens + phase2_tokens
 
     # Guardrail (Generate -> Guardrail per the architecture's stage order).
     # Runs here, not in api.py, so a direct `python -m src.agent` run goes
@@ -255,7 +281,16 @@ def draft_case_note(transaction_id):
     # with api.py's "no defensive handling for genuine failures" stance,
     # this propagates as a real failure instead of being swallowed.
     # redact_pii runs only once that check has passed.
-    check_fraud_language(case_note)
+    try:
+        check_fraud_language(case_note)
+    except GuardrailViolation as e:
+        # Attach the already-known token count before it's lost -- the
+        # exception unwinds past the point where total_tokens would
+        # otherwise have been returned (Action 22 finding: without this,
+        # a guardrail-violating request silently dropped its token cost
+        # from the log, the one failure mode most worth tracking it on).
+        e.total_tokens = total_tokens
+        raise
 
     # A fresh lookup (cheap local CSV read, not an API call) rather than
     # parsing the name back out of the Phase 1 conversation history.
@@ -268,6 +303,7 @@ def draft_case_note(transaction_id):
         "transaction_id": transaction_id,
         "fraud_pattern_source": fraud_pattern_source,
         "tools_called": sorted(tools_called),
+        "total_tokens": total_tokens,
         "case_note": case_note,
     }
 

@@ -55,9 +55,9 @@
   },
   {
     "transaction_id": "T0143",
-    "expected_recommendation": "escalate",
+    "expected_recommendation": "clear",
     "expected_flag_reason": "amount_spike",
-    "reasoning": "About 55% over typical max, a larger deviation than a comparable cleared case, even though the merchant itself is low-risk."
+    "reasoning": "Initially labeled escalate on magnitude alone (~55% over the stated $89.12 ceiling). Revisited on Day 6 (Action 23) after the agent's own evidence surfaced two prior transactions for this same customer already above that ceiling -- $164.50 (T0063, larger than this transaction) and $116.31 (T0125) -- indicating a real behavioral pattern the original static-ceiling comparison missed. Reads as ordinary variance for this specific customer, not an anomaly."
   },
   {
     "transaction_id": "T0018",
