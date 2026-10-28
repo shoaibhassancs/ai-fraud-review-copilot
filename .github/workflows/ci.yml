@@ -40,4 +40,4 @@ jobs:
         # logic" instinct.
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m eval.run_eval --only T0055,T0014,T0116,T0018
+        run: python -m eval.run_eval --only T0116,T0079,T0014,T0018
