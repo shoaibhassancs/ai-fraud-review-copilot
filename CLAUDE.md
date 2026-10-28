@@ -84,3 +84,17 @@ python -m eval.run_eval
   - `amount_spike`'s two misses (T0078, T0143) share a shape: both were labeled escalate purely on amount magnitude at a low-risk merchant, and the agent cleared both — possibly anchoring on the merchant's low risk tag over the raw amount deviation. Not yet confirmed against the actual `case_note` text.
   - To investigate: pull the real `case_note` text for these five misses to see the agent's actual reasoning, not just the final verdict:
     `python -m eval.run_eval --only T0071,T0091,T0133,T0078,T0143`
+- **Per-request latency as of Action 19 (Day 5): ~60-110s, confirmed I/O-wait-bound, not locally-compute-bound.**
+  Measured both on Render's free tier (63.4s, 88.7s, 107.7s across three calls) and locally on full
+  dev hardware (`time python -m src.agent T0002`: 64.55s wall-clock, but only 1.07s user + 0.38s
+  system CPU time — 2% utilization). Nearly identical wall-clock time on a fast local machine and a
+  resource-constrained free-tier instance rules out local compute as the bottleneck. The remaining
+  time is some combination of network round-trip latency and Gemini's own server-side inference
+  ("thinking") time for `gemini-3.5-flash-lite` — both look identical from the local process's point
+  of view (idle CPU), and this measurement doesn't distinguish how much is which. What's established:
+  the cost is inherent to the two-phase design's 3-4 sequential Gemini API round-trips per request
+  (tool-calling loop, then a separate structured-generation call), not to where the app is deployed.
+  Practical implication unchanged: never point the eval script or a CI job at the live HTTP endpoint
+  for batch scoring — at this per-request cost, an 18-case run would take 20-35+ minutes in request
+  time alone, on top of RPM pacing. `eval/run_eval.py` correctly calls `draft_case_note()` directly
+  already; keep it that way. The deployed URL is for single-request demos, not batch evaluation.
