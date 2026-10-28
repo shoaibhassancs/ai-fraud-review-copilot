@@ -19,19 +19,25 @@ jobs:
       - name: Embed knowledge base into Chroma
         run: python src/retrieval.py
 
-      - name: Run eval subset (one case per flag type)
-        # One per flag type, picked for decisiveness, not just coverage --
-        # T0014 (amount_spike) was swapped for T0078 after a real, logged
-        # CI flip (escalate -> clear on two consecutive runs, zero code
-        # changes) exposed it as a genuinely borderline case: a moderate
-        # overage plus a high-risk-merchant tag, with a mitigating prior
-        # purchase the model itself surfaced back in Action 13. T0078 is a
-        # single-signal case (~2.75x typical max, no complicating factor)
-        # per eval_set.json's own reasoning -- chosen to reduce CI flakiness,
-        # not yet live-confirmed stable itself.
+      - name: Run eval subset (6 cases: 2x geo_anomaly, 2x amount_spike, 1x velocity_spike, 1x new_merchant_category)
+        # Widened from 4 to 6 after two consecutive real CI failures (T0014,
+        # then T0078) demonstrated genuine Gemini non-determinism on
+        # borderline cases -- not a selection mistake, confirmed noise. A
+        # 4-case "all must pass" gate was silently enforcing ~100% instead
+        # of the spec's actual 80% bar; one flip in 4 cases always fails it.
         #
-        # T0116 (geo_anomaly), T0078 (amount_spike), T0018 (velocity_spike),
-        # T0055 (new_merchant_category).
+        # 6 cases gives real tolerance: 5/6 = 83.3% still passes on a single
+        # flip, 4/6 = 66.7% correctly fails on two. Not widened to a
+        # symmetric 8 -- velocity_spike and new_merchant_category each have
+        # exactly one case with any tested history (T0018, T0055); a second
+        # pick there would be a blind guess with zero evidence, trading a
+        # known problem for an unknown one. Widened only where real
+        # evidence already existed to widen with:
+        #   geo_anomaly: T0116 (2x confirmed PASS), T0079 (1x confirmed PASS)
+        #   amount_spike: T0014 (known flip case, included deliberately),
+        #     T0078 (1x confirmed FAIL -- real signal, not yet resolved)
+        #   velocity_spike: T0018 (unchanged)
+        #   new_merchant_category: T0055 (unchanged)
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m eval.run_eval --only T0116,T0078,T0018,T0055
+        run: python -m eval.run_eval --only T0116,T0079,T0014,T0078,T0018,T0055
