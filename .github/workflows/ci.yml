@@ -32,6 +32,11 @@ jobs:
         # type instead: a regression in any category still gets caught, at
         # ~4 calls' worth of quota instead of ~50+.
         #
+        # Case selection: T0116 (geo_anomaly), T0055 (new_merchant_category),
+        # T0014 (amount_spike), T0018 (velocity_spike) -- one per flag type,
+        # each confirmed correct via Action 13's manual run at minimum
+        # (T0116 additionally confirmed via Action 17's eval script directly).
+        #
         # Note on the threshold: run_eval.py's 80% bar has no value that
         # lands at exactly 80% on 4 cases (3/4=75% fails, 4/4=100% passes),
         # so this gate is effectively "all 4 must pass" in practice, not a
@@ -40,4 +45,4 @@ jobs:
         # logic" instinct.
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        run: python -m eval.run_eval --only T0116,T0079,T0014,T0018
+        run: python -m eval.run_eval --only T0116,T0055,T0014,T0018
