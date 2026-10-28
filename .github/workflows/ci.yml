@@ -1,0 +1,43 @@
+name: Eval CI
+
+on: push
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Embed knowledge base into Chroma
+        # chroma_db/ is git-ignored (derived, regenerable state) -- CI starts
+        # with no embedded knowledge base, same reason the Dockerfile bakes
+        # this step in at build time (Action 18). Skipping this means every
+        # CI run would silently retrieve nothing.
+        run: python src/retrieval.py
+
+      - name: Run eval subset (one case per flag type)
+        # Full 18-case set is deliberately not run here -- Action 17 hit the
+        # model's 15 requests/minute cap even with 30s pacing, and Action 19
+        # measured 65-110s per request, so a full run would both burn a
+        # meaningful chunk of daily quota and take 20-35+ minutes per push.
+        # --only (built in Action 17) runs one representative case per flag
+        # type instead: a regression in any category still gets caught, at
+        # ~4 calls' worth of quota instead of ~50+.
+        #
+        # Note on the threshold: run_eval.py's 80% bar has no value that
+        # lands at exactly 80% on 4 cases (3/4=75% fails, 4/4=100% passes),
+        # so this gate is effectively "all 4 must pass" in practice, not a
+        # true 80% bar. Accepted as-is rather than building a CI-specific
+        # threshold, per the project's own "don't over-engineer the scoring
+        # logic" instinct.
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python -m eval.run_eval --only T0055,T0014,T0116,T0018
