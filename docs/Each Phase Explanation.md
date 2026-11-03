@@ -363,28 +363,7 @@ Python and its built-in tools handle the data and app logic; Gemini writes the a
 
 ---
 
-## Phase 11 — Topics to recognize and explain briefly
-
-This phase is a quick review of related ideas. You don't need to give a lecture; aim to explain each in a sentence and connect it to your project when you can.
-
-- **Python data structures:** In `src/tools.py`, customer records are stored in a **dictionary**, so looking up a customer by ID is fast. Transaction history is found by scanning a **list**, which is fine for your 150-row dataset; a larger system could index transactions by customer ID too.
-- **Core machine learning:** Training teaches a model, validation helps tune it, and a separate test set checks how it performs on new data. Your project doesn't train a model, but you avoided overfitting your prompt to one case by evaluating a set of examples.
-- **Evaluation metrics:** Your eval measures **accuracy**—the share of recommendations that match expected answers. A real fraud system might care more about **recall**, because missing real fraud can be more costly than sending an extra case for review.
-- **LLMs and transformers:** Gemini predicts text a piece at a time. Attention helps it use the instructions, retrieved reference text, and tool results in its context.
-- **Fine-tuning:** This changes the model's learned weights. LoRA and QLoRA are ways to fine-tune with fewer resources. Your project uses prompting and RAG instead, which are easier to adjust while the rules are still changing.
-- **Quantization and vLLM:** Quantization reduces the memory used by a model, sometimes at a quality cost. vLLM helps run models efficiently on GPUs. Neither is part of your project because Gemini is hosted as an API; you aren't serving model weights yourself.
-- **ONNX:** ONNX is a format and runtime for running models efficiently. Your project uses it locally for Chroma's text-embedding model.
-- **Data governance:** Before using real customer data, a production system would need clear rules for who can access the data, how long it is kept, and what it can be used for.
-- **SQL:** SQL is used to query relational databases. Your project uses CSV files for its records and ChromaDB for vector search, so it doesn't use SQL.
-
-**Quick-check answers:**
-
-1. Start with prompting, then add RAG when the model needs reference material, and consider fine-tuning last because it takes more effort to change when behavior or knowledge is still evolving.
-2. ONNX runs Chroma's local embedding model, which turns text into vectors for document search.
-
----
-
-## Phase 12 — Explain the project and practice interview answers
+## Explain the project
 
 This phase brings the project together into a short pitch and an architecture walkthrough.
 
@@ -397,7 +376,3 @@ This phase brings the project together into a short pitch and an architecture wa
 `SCOPE.md` and `CLAUDE.md` set the project boundaries → `data/generate_data.py` makes repeatable synthetic data → `src/flagger.py` adds rule-based flags → `knowledge_base/` and `src/retrieval.py` provide reference information through ChromaDB → `src/tools.py` looks up customer and merchant details → `src/agent.py` coordinates Gemini and the tools, using `src/schemas.py` to shape the case note → `src/guardrail.py` checks and redacts the note → `src/api.py` serves it through FastAPI → `eval/` measures how well the agent performs → `Dockerfile` and `.github/workflows/ci.yml` package the app and check changes.
 
 **Tools in the story:** Python, Gemini, ChromaDB, FastAPI, Docker, Render, and GitHub Actions. In simple terms: Python runs the logic; Gemini writes the analysis; ChromaDB searches the reference documents; FastAPI exposes the app; Docker packages it; Render hosts it; and GitHub Actions checks changes.
-
-For the practice step, answer this as if you're in an interview:
-
-> "Your agent scored 61% on your own evaluation before the fix. Is it really okay to call the project done?"
