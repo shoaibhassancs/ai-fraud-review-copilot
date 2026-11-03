@@ -1,9 +1,4 @@
-# Interview Prep Notes — AI Fraud-Review Copilot
-
-Running notes from the interview-prep walkthrough, added one concept at a time as we cover it.
-Grounded in the real Action Log and source code — not invented explanations.
-
----
+# AI Fraud-Review Copilot Project — Each Phase Explained
 
 ## Phase 0 — Foundations / mindset
 
