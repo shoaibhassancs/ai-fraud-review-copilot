@@ -310,7 +310,7 @@ You added two instructions to `src/agent.py`: compare the size of previous purch
 
 That is encouraging, but you can't yet say the accuracy problem is fully fixed. T0078 has passed three times since the change, but that's not conclusive. T0018, which had always passed before, failed once; it's not clear whether that was ordinary variation or an unintended effect of the prompt change. A new run of all 18 cases is still needed for an updated accuracy score.
 
-**Interview answer:** "I fixed two specific reasoning failures and verified that the agent's explanations changed in the expected way. But I haven't rerun the full evaluation set, and one previously reliable case has failed once, so I can't yet claim the overall accuracy problem is fixed."
+**Honest summary:** Two specific reasoning failures were fixed, and the agent's explanations changed in the expected way. But the full evaluation set hasn't been rerun yet, and one previously reliable case has failed once, so the overall accuracy problem can't yet be called fixed.
 
 ---
 
@@ -355,7 +355,7 @@ That is encouraging, but you can't yet say the accuracy problem is fully fixed. 
 
 ### Mentioned, but not used to build this project
 
-SQL, fine-tuning, LoRA/QLoRA, quantization, vLLM, and Triton are topics to recognize for interviews. This project uses CSV files and ChromaDB rather than a relational database, and calls a hosted Gemini API rather than serving or fine-tuning model weights.
+SQL, fine-tuning, LoRA/QLoRA, quantization, vLLM, and Triton are related topics worth knowing but weren't needed here. This project uses CSV files and ChromaDB rather than a relational database, and calls a hosted Gemini API rather than serving or fine-tuning model weights.
 
 ### Summary
 
@@ -363,13 +363,13 @@ Python and its built-in tools handle the data and app logic; Gemini writes the a
 
 ---
 
-## Explain the project
+## Explaining the project
 
-This phase brings the project together into a short pitch and an architecture walkthrough.
+This phase brings the project together into a short summary and an architecture walkthrough.
 
-### A simple project pitch
+### A simple project summary
 
-"I built a fraud-review assistant that helps an analyst investigate transactions. A basic rules system flags possible concerns, then the agent retrieves reference information and customer or merchant details before writing a case note. I used Gemini for reasoning, ChromaDB for document search, Python tools for the lookups, and a code-based guardrail to catch definite fraud claims and redact customer names. I packaged the app with Docker, deployed it on Render, and use GitHub Actions to run a small evaluation on each push. The first full evaluation scored 61.1%, and I've fixed two specific reasoning issues, but I still need to rerun all 18 cases to measure the updated accuracy."
+This is a fraud-review assistant that helps an analyst investigate transactions. A basic rules system flags possible concerns, then the agent retrieves reference information and customer or merchant details before writing a case note. It uses Gemini for reasoning, ChromaDB for document search, Python tools for the lookups, and a code-based guardrail to catch definite fraud claims and redact customer names. The app is packaged with Docker, deployed on Render, and GitHub Actions runs a small evaluation on each push. The first full evaluation scored 61.1%, and two specific reasoning issues have since been fixed, but all 18 cases still need to be rerun to measure the updated accuracy.
 
 ### The architecture in file order
 
